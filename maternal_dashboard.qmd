@@ -1,0 +1,162 @@
+---
+title: "Maternal Mortality Dashboard" 
+format: 
+    dashboard:
+      theme: styles.scss
+jupyter: demo_file
+---
+
+```{python}
+import warnings
+warnings.filterwarnings("ignore")
+```
+
+```{python}
+import pandas as pd
+import plotly.express as px
+import numpy as np
+import itables
+
+# load data
+mmr_data = pd.read_csv("maternal_mortality_ratio_per_100000_live_births.csv")
+
+# data wrangling
+mmr_long = mmr_data.melt(id_vars=["geo","name"], var_name="year", value_name="maternal_rates") #wide to long
+
+mmr_long = mmr_long.rename(columns={"name": "countries"})
+
+mmr_long["year"] = pd.to_numeric(mmr_long["year"], errors="coerce") #convert years into numerics
+mmr_long = mmr_long.dropna(subset=["maternal_rates"]) #drop any rows with missing data
+
+mmr_recent = mmr_long[mmr_long["year"] >= 1990] #subset from 1990
+
+latest_year = mmr_recent["year"].max()
+latest = mmr_recent[mmr_recent["year"] == latest_year] #subset most recent year
+
+# core metrics
+global_avg_mmr = float(round(mmr_recent["maternal_rates"].mean(),1)) #average mortality rate
+highest_country = (mmr_recent.groupby("countries")["maternal_rates"].mean().sort_values(ascending=False).index[0]) #worst country
+lowest_country = (mmr_recent.groupby("countries")["maternal_rates"].mean().sort_values().index[0]) #least country
+
+high_risk_countries = mmr_recent[mmr_recent["maternal_rates"] > 300]["countries"].nunique() 
+countries_meeting_sdg = mmr_recent[mmr_recent["maternal_rates"] < 70]["countries"].nunique()
+crisis_countries = mmr_recent[mmr_recent["maternal_rates"] > 500]["countries"].nunique()
+
+# global trend
+trend = mmr_recent.groupby("year")["maternal_rates"].mean().reset_index()
+
+trend_chart = px.line(trend, x="year", y="maternal_rates", title="Global maternal mortality trend (1990–Present)")
+
+#top ten countries
+top10 = (mmr_recent.groupby("countries")["maternal_rates"].mean().sort_values(ascending=False).head(10).reset_index())
+
+bar_top = px.bar(top10, x="maternal_rates", y="countries", title="Top 10 countries with highest maternal mortality")
+
+# distribution
+dist_chart = px.box(mmr_recent, y="maternal_rates", points= "all", title="Distribution of maternal mortality ratios globally", color_discrete_sequence=['#7f1d1d'])
+
+# global maps
+map_fig = px.choropleth(latest, locations="geo", color="maternal_rates", hover_name="countries",
+    color_continuous_scale="Reds", title="Global maternal mortality map")
+
+# high trend
+top5 = (mmr_recent.groupby("countries")["maternal_rates"].mean().sort_values(ascending=False).head(5).index)
+
+high_burden = mmr_recent[mmr_recent["countries"].isin(top5)]
+
+trend_high = px.line(high_burden, x="year", y="maternal_rates", color="countries", title="Maternal mortality trends in highest burden countries")
+
+# policy analysis
+pivot = mmr_recent.pivot_table(index="countries", columns="year", values="maternal_rates")
+
+pivot["reduction"] = pivot[1990] - pivot[2013]
+
+top_improvement = pivot.sort_values("reduction", ascending=False).head(15).reset_index()
+
+improvement_chart = px.bar(top_improvement, x="reduction", y="countries", title="Countries with largest reduction in maternal mortality")
+
+#tables
+table = latest.sort_values("maternal_rates",ascending=False).head(20)
+```
+
+
+# Global overview
+## Row {height=25%}
+::: {.valuebox icon="globe" color="#7F1D1D" title="Global Average MMR"}
+`{python} global_avg_mmr`
+:::
+
+::: {.valuebox icon="exclamation-triangle" color="#DC2626" title="High Risk Countries (>300)"}
+`{python} high_risk_countries` 
+:::
+
+::: {.valuebox icon="check-circle" color="#15803D" title="Countries Meeting SDG (<70)"}
+`{python} countries_meeting_sdg`
+:::
+
+::: {.valuebox icon="activity" color="#7C3AED" title="Crisis Countries (>500)"}
+`{python} crisis_countries`
+:::
+
+## Row {height=75%}
+### Column {width="60%"}
+```{python}
+trend_chart
+```
+
+### Column {width="40%"}
+```{python}
+bar_top
+```
+
+
+# Global distribution
+## Row {height=60%}
+### Column {width="60%"}
+
+```{python}
+map_fig
+```
+
+### Column {width="40%"}
+
+```{python}
+dist_chart
+```
+
+## Row {height=40%}
+### Column {width="60%"}
+
+```{python}
+trend_high
+```
+
+### Column {width="40%"}
+
+## 
+::: {.callout-note}
+*Program Observations*: maternal mortality remains highly concentrated in a limited number of countries. Nations exceeding 300 deaths per 100,000 births represent priority health system strengthening zones. Global reductions since 1990 have been uneven, with fragile health systems showing slower progress.
+:::
+
+# Policy analysis
+## row 
+### Column {height=65%}
+
+```{python}
+improvement_chart
+```
+
+### Column {height=35%}
+::: {.callout-note}
+Key lessons from successful countries
+evidence from Rwanda, Sierra Leone, Equitorial Guines and Eritrea shows rapid maternal mortality reduction.
+:::
+
+# About
+This dashboard analyzes global maternal mortality trends using international health indicator datasets to support program planning, SDG monitoring, and maternal health policy decision-making.
+
+
+```{python}
+itables.show(table, caption="Top 20 countries with highest maternal mortality",classes="display nowrap compact", buttons=["csv" "excel", "Html5"])
+```
+
