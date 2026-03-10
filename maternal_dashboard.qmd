@@ -135,7 +135,7 @@ trend_high
 
 ## 
 ::: {.callout-note}
-*Program Observations*: maternal mortality remains highly concentrated in a limited number of countries. Nations exceeding 300 deaths per 100,000 births represent priority health system strengthening zones. Global reductions since 1990 have been uneven, with fragile health systems showing slower progress.
+**Program Observations**: maternal mortality remains highly concentrated in a limited number of countries. Nations exceeding 300 deaths per 100,000 births represent priority health system strengthening zones. Global reductions since 1990 have been uneven, with fragile health systems showing slower progress.
 :::
 
 # Policy analysis
