@@ -6,6 +6,8 @@ format:
     orientation: rows
 fig-width: 10
 fig-asp: 0.3
+excute:
+  echo: false
 ---
 
 
