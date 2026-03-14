@@ -1,0 +1,128 @@
+---
+title: "Global Breast Cancer Analysis"
+format: 
+  dashboard:
+    theme: lux
+    orientation: rows
+fig-width: 10
+fig-asp: 0.3
+---
+
+
+```{python}
+import pandas as pd
+import plotly.express as px 
+from itables import show
+import numpy as np
+#import libraries
+
+cancer_data = pd.read_csv("data/breast_cancer_number_of_new_female_cases.csv") #load data
+
+cancer_long = cancer_data.melt(id_vars=['geo', 'name'], var_name='year', value_name='cases')
+
+cancer_long = cancer_long.rename(columns={'geo': 'country_code', 'name': 'country'}) #rename column heads
+
+cancer_long['year'] = pd.to_numeric(cancer_long['year'])
+
+latest_year = cancer_long['year'].max()
+earliest_year = cancer_long['year'].min()
+
+
+data_2023 = cancer_long[cancer_long['year'] == latest_year]
+data_1990 = cancer_long[cancer_long['year'] == earliest_year] #filter for lastest year and first year
+
+# Calculate values for cards
+total_cases_2023 = data_2023['cases'].sum()
+avg_cases_2023 = data_2023['cases'].mean()
+max_cases_val = data_2023['cases'].max()
+max_country = data_2023.loc[data_2023['cases'].idxmax(), 'country']
+latest_stat = cancer_long[cancer_long['year'] == latest_year]
+top_country_row = latest_stat.sort_values(by='cases', ascending=False).iloc[0]
+top_country = top_country_row['country']
+top_country_value = top_country_row['cases']
+trend = cancer_long.groupby('year')['cases'].sum().reset_index()
+
+area = px.area(trend, x='year', y='cases', title="Total female breast cancer cases globally")
+
+top_10 = data_2023.nlargest(10, 'cases')
+
+bar1 = px.bar(top_10, x='cases', y='country', orientation='h', color='cases', color_continuous_scale='Reds',title="Top 10 impacted countries in 2023")
+
+map = px.choropleth(data_2023, locations="country_code", color="cases", hover_name="country",color_continuous_scale='Viridis', title="Global heatmap of breast cancer cases (2023)")
+
+bar2 = px.bar(data_2023.sample(5), x='country', y='cases', color='country', title="Sample comparison of 5 countries")
+
+```
+
+
+# Overview
+## {height=30%}
+::: {.valuebox icon="hospital" color="#e63946" title="Total Cases"}
+`{python} f"{total_cases_2023:,.0f}"`
+:::
+
+::: {.valuebox icon="person-heart" color="#a8dadc" title="Average Cases per country"}
+`{python} f"{avg_cases_2023:,.0f}"`
+:::
+
+::: {.valuebox icon="award" color="#457b9d" title="Highest impact"}
+`{python} f"{max_country}"`
+:::
+
+## Row {height=70%}
+
+```{python}
+#| title: Global trend of breast cancer (1990 - 2023)
+area
+```
+
+
+```{python}
+#| title: Top 10 countries by case
+bar1
+```
+
+# Geographic distribution {orientation="columns"}
+## row {width=60%}
+
+### column {height=20%}
+::: {.valuebox icon="globe" color="#2a9d8f" title="Countries tracked"}
+`{python} len(data_2023)`
+:::
+
+::: {.valuebox icon="graph-up" color="#e9c46a" title="Global cases since 1990"}
+`{python} f"{(total_cases_2023 - data_1990['cases'].sum()):,.0f}"`
+:::
+
+### column {height=70%}
+```{python}
+map
+```
+
+
+### column {height=10%}
+This map displays the geographic spread of breast cancer cases as of 1990. 
+
+## row {width=40%}
+### column {height=90%}
+
+```{python}
+bar2
+```
+
+### row {height=10%}
+This bar graph shows the distribution across a selection of representative countries. 
+
+# Data reference
+### Row 
+
+```{python}
+table_data = data_2023[['country', 'cases']].sort_values(by='cases', ascending=False)
+
+show(table_data, buttons=["csv", "excel", "html5"])
+```
+
+
+::: {.callout-note}
+Description: this dataset represents the estimated number of new female breast cancer cases per year. The data used in this dashboard spans from 1990 to 2023. For the "Relationship" analysis, we compared the baseline data from 1990 against the 2023 results to determine the scale of growth globally.
+:::
