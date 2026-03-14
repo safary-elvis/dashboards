@@ -118,24 +118,21 @@ bar_top
 map_fig
 ```
 
-### Column {width="40%"}
+### Column {width="60%"}
 
 ```{python}
 dist_chart
 ```
 
-## Row {height=40%}
-### Column {width="60%"}
+## Row {width="70%"}
 
 ```{python}
 trend_high
 ```
 
-### Column {width="40%"}
-
-## 
+### {width="30%"}
 ::: {.callout-note}
-**Program Observations**: maternal mortality remains highly concentrated in a limited number of countries. Nations exceeding 300 deaths per 100,000 births represent priority health system strengthening zones. Global reductions since 1990 have been uneven, with fragile health systems showing slower progress.
+Maternal mortality remains highly concentrated in a limited number of countries. Nations exceeding 300 deaths per 100,000 births represent priority health system strengthening zones. 
 :::
 
 # Policy analysis
